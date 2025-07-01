@@ -19,13 +19,22 @@
 
 #include <linux/cpu.h>
 
-#ifndef HAVE_TOPOLOGY_SIBLING_CPUMASK
+#ifdef HAVE_TOPOLOGY_SIBLING_CPUMASK
+// Kernel provides topology_sibling_cpumask, do not redefine
+#else
 # define topology_sibling_cpumask(cpu)	topology_thread_cpumask(cpu)
 #endif /* HAVE_TOPOLOGY_SIBLING_CPUMASK */
 
-#ifndef HAVE_CPUS_READ_LOCK
+#ifdef HAVE_CPUS_READ_LOCK
+// Kernel provides cpus_read_lock, do not redefine
+#else
 # define cpus_read_lock		get_online_cpus
+#endif /* HAVE_CPUS_READ_LOCK */
+
+#ifdef HAVE_CPUS_READ_UNLOCK
+// Kernel provides cpus_read_unlock, do not redefine
+#else
 # define cpus_read_unlock	put_online_cpus
-#endif
+#endif /* HAVE_CPUS_READ_UNLOCK */
 
 #endif /* __LIBCFS_LINUX_CPU_H__ */

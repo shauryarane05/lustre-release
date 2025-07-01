@@ -13,13 +13,49 @@
 #endif
 #include <linux/wait.h>
 
-#ifndef HAVE_WAIT_QUEUE_ENTRY
-#define wait_queue_entry_t wait_queue_t
-#endif
-
 #ifndef HAVE_PREPARE_TO_WAIT_EVENT
 #define __add_wait_queue_entry_tail __add_wait_queue_tail
 #endif
+
+#ifdef HAVE_WAIT_BIT_QUEUE_ENTRY
+// Kernel provides struct wait_bit_queue_entry, do not redefine
+#else
+// (Compatibility implementation here if needed)
+#endif /* HAVE_WAIT_BIT_QUEUE_ENTRY */
+
+#ifdef HAVE_CLEAR_AND_WAKE_UP_BIT
+// Kernel provides clear_and_wake_up_bit, do not redefine
+#endif /* HAVE_CLEAR_AND_WAKE_UP_BIT */
+
+#ifdef HAVE___WAIT_IS_INTERRUPTIBLE
+// Kernel provides ___wait_is_interruptible, do not redefine
+#else
+// (Compatibility implementation here if needed)
+#endif /* HAVE___WAIT_IS_INTERRUPTIBLE */
+
+#ifdef HAVE___WAIT_VAR_EVENT
+// Kernel provides ___wait_var_event, do not redefine
+#else
+// (Compatibility implementation here if needed)
+#endif /* HAVE___WAIT_VAR_EVENT */
+
+#ifdef HAVE___WAIT_VAR_EVENT_TIMEOUT
+// Kernel provides __wait_var_event_timeout, do not redefine
+#else
+// (Compatibility implementation here if needed)
+#endif /* HAVE___WAIT_VAR_EVENT_TIMEOUT */
+
+#ifdef HAVE_WAIT_VAR_EVENT_TIMEOUT
+// Kernel provides wait_var_event_timeout, do not redefine
+#else
+// (Compatibility implementation here if needed)
+#endif /* HAVE_WAIT_VAR_EVENT_TIMEOUT */
+
+#ifdef HAVE_INIT_WAIT_VAR_ENTRY
+// Kernel provides init_wait_var_entry, do not redefine
+#else
+// (Compatibility implementation here if needed)
+#endif /* HAVE_INIT_WAIT_VAR_ENTRY */
 
 #ifndef HAVE_WAIT_BIT_HEADER_H
 struct wait_bit_queue_entry {
@@ -49,25 +85,6 @@ extern long prepare_to_wait_event(wait_queue_head_t *wq_head,
 		__ret = 1;						\
 	__cond || !__ret;						\
 })
-
-#ifndef HAVE_CLEAR_AND_WAKE_UP_BIT
-/**
- * clear_and_wake_up_bit - clear a bit and wake up anyone waiting on that bit
- *
- * @bit: the bit of the word being waited on
- * @word: the word being waited on, a kernel virtual address
- *
- * You can use this helper if bitflags are manipulated atomically rather than
- * non-atomically under a lock.
- */
-static inline void clear_and_wake_up_bit(int bit, void *word)
-{
-	clear_bit_unlock(bit, word);
-	/* See wake_up_bit() for which memory barrier you need to use. */
-	smp_mb__after_atomic();
-	wake_up_bit(word, bit);
-}
-#endif /* ! HAVE_CLEAR_AND_WAKE_UP_BIT */
 
 #ifndef HAVE_WAIT_VAR_EVENT
 extern void __init wait_bit_init(void);

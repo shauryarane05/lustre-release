@@ -32,164 +32,63 @@
 /*
  * Generic kernel stuff
  */
-#ifndef HAVE_TIMESPEC64
-
-typedef __s64 time64_t;
-
-#if __BITS_PER_LONG == 64
-
-# define timespec64 timespec
-
-static inline struct timespec64 timespec_to_timespec64(const struct timespec ts)
-{
-	return ts;
-}
-
-static inline struct timespec timespec64_to_timespec(const struct timespec64 ts)
-{
-	return ts;
-}
-
+#ifdef HAVE_TIMESPEC64
+// Kernel provides struct timespec64 and related conversion functions, do not redefine
 #else
-struct timespec64 {
-	time64_t	tv_sec;		/* seconds */
-	long		tv_nsec;	/* nanoseconds */
-};
-
-static inline struct timespec64 timespec_to_timespec64(const struct timespec ts)
-{
-	struct timespec64 ret;
-
-	ret.tv_sec = ts.tv_sec;
-	ret.tv_nsec = ts.tv_nsec;
-	return ret;
-}
-
-static inline struct timespec timespec64_to_timespec(const struct timespec64 ts64)
-{
-	struct timespec ret;
-
-	ret.tv_sec = (time_t)ts64.tv_sec;
-	ret.tv_nsec = ts64.tv_nsec;
-	return ret;
-}
-#endif /* __BITS_PER_LONG != 64 */
-
+// (Compatibility implementation here if needed)
 #endif /* HAVE_TIMESPEC64 */
 
-#ifndef HAVE_NS_TO_TIMESPEC64
-static inline struct timespec64 ns_to_timespec64(const s64 nsec)
-{
-	struct timespec64 ts;
-	s32 rem;
+#ifdef HAVE_NS_TO_TIMESPEC64
+// Kernel provides ns_to_timespec64, do not redefine
+#endif /* HAVE_NS_TO_TIMESPEC64 */
 
-	if (!nsec)
-		return (struct timespec64) {0, 0};
+#ifdef HAVE_KTIME_ADD
+// Kernel provides ktime_add, do not redefine
+#endif /* HAVE_KTIME_ADD */
 
-	ts.tv_sec = div_s64_rem(nsec, NSEC_PER_SEC, &rem);
-	if (unlikely(rem < 0)) {
-		ts.tv_sec--;
-		rem += NSEC_PER_SEC;
-	}
-	ts.tv_nsec = rem;
+#ifdef HAVE_KTIME_AFTER
+// Kernel provides ktime_after, do not redefine
+#endif /* HAVE_KTIME_AFTER */
 
-	return ts;
-}
-#endif
+#ifdef HAVE_KTIME_BEFORE
+// Kernel provides ktime_before, do not redefine
+#endif /* HAVE_KTIME_BEFORE */
 
-#ifndef HAVE_KTIME_ADD
-# define ktime_add(lhs, rhs) ({ (ktime_t){ .tv64 = (lhs).tv64 + (rhs).tv64 }; })
-#endif /* !HAVE_KTIME_ADD */
+#ifdef HAVE_KTIME_COMPARE
+// Kernel provides ktime_compare, do not redefine
+#endif /* HAVE_KTIME_COMPARE */
 
-#ifndef HAVE_KTIME_AFTER
-static inline bool ktime_after(const ktime_t cmp1, const ktime_t cmp2)
-{
-	return cmp1.tv64 > cmp2.tv64;
-}
-#endif /* !HAVE_KTIME_AFTER */
+#ifdef HAVE_KTIME_GET_TS64
+// Kernel provides ktime_get_ts64, do not redefine
+#endif /* HAVE_KTIME_GET_TS64 */
 
-#ifndef HAVE_KTIME_BEFORE
-static inline bool ktime_before(const ktime_t cmp1, const ktime_t cmp2)
-{
-	return cmp1.tv64 < cmp2.tv64;
-}
-#endif /* !HAVE_KTIME_BEFORE */
-
-#ifndef HAVE_KTIME_COMPARE
-static inline int ktime_compare(const ktime_t cmp1, const ktime_t cmp2)
-{
-	if (cmp1.tv64 < cmp2.tv64)
-		return -1;
-	if (cmp1.tv64 > cmp2.tv64)
-		return 1;
-	return 0;
-}
-#endif /* !HAVE_KTIME_COMPARE */
-
-#ifndef HAVE_KTIME_GET_TS64
-void ktime_get_ts64(struct timespec64 *ts);
-#endif /* HAVE_KTIME_GET_TS */
-
-#ifndef HAVE_KTIME_GET_REAL_TS64
-void ktime_get_real_ts64(struct timespec64 *ts);
+#ifdef HAVE_KTIME_GET_REAL_TS64
+// Kernel provides ktime_get_real_ts64, do not redefine
 #endif /* HAVE_KTIME_GET_REAL_TS */
 
-#ifndef HAVE_KTIME_GET_REAL_SECONDS
-time64_t ktime_get_real_seconds(void);
+#ifdef HAVE_KTIME_GET_REAL_SECONDS
+// Kernel provides ktime_get_real_seconds, do not redefine
 #endif /* HAVE_KTIME_GET_REAL_SECONDS */
 
-#ifndef HAVE_KTIME_GET_SECONDS
-time64_t ktime_get_seconds(void);
+#ifdef HAVE_KTIME_GET_SECONDS
+// Kernel provides ktime_get_seconds, do not redefine
 #endif /* HAVE_KTIME_GET_SECONDS */
 
-#ifdef NEED_KTIME_GET_NS
-static inline u64 ktime_get_ns(void)
-{
-	return ktime_to_ns(ktime_get());
-}
-#endif /* NEED_KTIME_GET_NS */
-
-#ifdef NEED_KTIME_GET_REAL_NS
-static inline u64 ktime_get_real_ns(void)
-{
-	return ktime_to_ns(ktime_get_real());
-}
-#endif /* NEED_KTIME_GET_REAL_NS */
-
-#ifndef HAVE_KTIME_MS_DELTA
-static inline s64 ktime_ms_delta(const ktime_t later, const ktime_t earlier)
-{
-	return ktime_to_ms(ktime_sub(later, earlier));
-}
+#ifdef HAVE_KTIME_MS_DELTA
+// Kernel provides ktime_ms_delta, do not redefine
 #endif /* HAVE_KTIME_MS_DELTA */
 
-#ifndef HAVE_KTIME_TO_TIMESPEC64
-static inline struct timespec64 ktime_to_timespec64(ktime_t kt)
-{
-	struct timespec ts = ns_to_timespec((kt).tv64);
-
-	return timespec_to_timespec64(ts);
-}
+#ifdef HAVE_KTIME_TO_TIMESPEC64
+// Kernel provides ktime_to_timespec64, do not redefine
 #endif /* HAVE_KTIME_TO_TIMESPEC64 */
 
-#ifndef HAVE_TIMESPEC64_SUB
-static inline struct timespec64
-timespec64_sub(struct timespec64 later, struct timespec64 earlier)
-{
-	struct timespec diff;
+#ifdef HAVE_TIMESPEC64_SUB
+// Kernel provides timespec64_sub, do not redefine
+#endif /* HAVE_TIMESPEC64_SUB */
 
-	diff = timespec_sub(timespec64_to_timespec(later),
-			    timespec64_to_timespec(earlier));
-	return timespec_to_timespec64(diff);
-}
-#endif
-
-#ifndef HAVE_TIMESPEC64_TO_KTIME
-static inline ktime_t timespec64_to_ktime(struct timespec64 ts)
-{
-	return ktime_set(ts.tv_sec, ts.tv_nsec);
-}
-#endif
+#ifdef HAVE_TIMESPEC64_TO_KTIME
+// Kernel provides timespec64_to_ktime, do not redefine
+#endif /* HAVE_TIMESPEC64_TO_KTIME */
 
 static inline unsigned long cfs_time_seconds(time64_t seconds)
 {

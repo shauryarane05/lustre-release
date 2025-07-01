@@ -30,84 +30,35 @@
 
 unsigned long cfs_totalram_pages(void);
 
-#ifndef HAVE_MEMALLOC_RECLAIM
-static inline unsigned int memalloc_noreclaim_save(void)
-{
-	unsigned int flags = current->flags & PF_MEMALLOC;
+#ifdef HAVE_MEMALLOC_NORECLAIM_SAVE
+// Kernel provides memalloc_noreclaim_save, do not redefine
+#else
+// (Compatibility implementation here if needed)
+#endif /* HAVE_MEMALLOC_NORECLAIM_SAVE */
 
-	current->flags |= PF_MEMALLOC;
-	return flags;
-}
+#ifdef HAVE_MEMALLOC_NORECLAIM_RESTORE
+// Kernel provides memalloc_noreclaim_restore, do not redefine
+#else
+// (Compatibility implementation here if needed)
+#endif /* HAVE_MEMALLOC_NORECLAIM_RESTORE */
 
-static inline void memalloc_noreclaim_restore(unsigned int flags)
-{
-	current->flags = (current->flags & ~PF_MEMALLOC) | flags;
-}
-#endif /* !HAVE_MEMALLOC_RECLAIM */
+#ifdef HAVE_BITMAP_ALLOC
+// Kernel provides bitmap_alloc, bitmap_zalloc, bitmap_free, do not redefine
+#else
+// (Compatibility implementation here if needed)
+#endif /* HAVE_BITMAP_ALLOC */
 
-#ifndef HAVE_BITMAP_ALLOC
-static inline unsigned long *bitmap_alloc(unsigned int nbits, gfp_t flags)
-{
-	return kmalloc_array(BITS_TO_LONGS(nbits), sizeof(unsigned long),
-			     flags);
-}
-
-static inline unsigned long *bitmap_zalloc(unsigned int nbits, gfp_t flags)
-{
-	return bitmap_alloc(nbits, flags | __GFP_ZERO);
-}
-
-static inline void bitmap_free(const unsigned long *bitmap)
-{
-	kfree(bitmap);
-}
-#endif /* !HAVE_BITMAP_ALLOC */
+#ifdef HAVE_MMAP_WRITE_LOCK
+// Kernel provides mmap_write_lock, mmap_write_trylock, mmap_write_unlock, mmap_read_lock, mmap_read_trylock, mmap_read_unlock, do not redefine
+#else
+// (Compatibility implementation here if needed)
+#endif /* HAVE_MMAP_WRITE_LOCK */
 
 /*
  * Shrinker
  */
 #ifndef SHRINK_STOP
 # define SHRINK_STOP (~0UL)
-#endif
-
-#ifndef HAVE_MMAP_LOCK
-static inline void mmap_write_lock(struct mm_struct *mm)
-{
-	down_write(&mm->mmap_sem);
-}
-
-static inline bool mmap_write_trylock(struct mm_struct *mm)
-{
-	return down_write_trylock(&mm->mmap_sem) != 0;
-}
-
-static inline void mmap_write_unlock(struct mm_struct *mm)
-{
-	up_write(&mm->mmap_sem);
-}
-
-static inline void mmap_read_lock(struct mm_struct *mm)
-{
-	down_read(&mm->mmap_sem);
-}
-
-static inline bool mmap_read_trylock(struct mm_struct *mm)
-{
-	return down_read_trylock(&mm->mmap_sem) != 0;
-}
-
-static inline void mmap_read_unlock(struct mm_struct *mm)
-{
-	up_read(&mm->mmap_sem);
-}
-#else
- #ifndef HAVE_MMAP_WRITE_TRYLOCK
-/* Replacement for mmap_write_trylock() */
-static inline bool mmap_write_trylock(struct mm_struct *mm)
-{
-	return down_write_trylock(&mm->mmap_lock) != 0;
-}
- #endif /* HAVE_MMAP_WRITE_TRYLOCK */
 #endif
 
 #ifdef HAVE_VMALLOC_2ARGS

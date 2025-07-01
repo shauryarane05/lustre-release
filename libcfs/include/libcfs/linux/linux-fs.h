@@ -22,12 +22,14 @@
 #include <linux/backing-dev.h>
 #include <linux/pagemap.h>
 
-#ifndef HAVE_FILE_DENTRY
+#ifdef HAVE_FILE_DENTRY
+// Kernel provides file_dentry, do not redefine
+#else
 static inline struct dentry *file_dentry(const struct file *file)
 {
 	return file->f_path.dentry;
 }
-#endif
+#endif /* HAVE_FILE_DENTRY */
 
 #ifndef S_DT_SHIFT
 #define S_DT_SHIFT		12

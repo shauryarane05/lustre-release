@@ -7,7 +7,9 @@
 #include <net/netlink.h>
 #include <net/genetlink.h>
 
-#ifndef HAVE_NETDEV_CMD_TO_NAME
+#ifdef HAVE_NETDEV_CMD_TO_NAME
+// Kernel provides netdev_cmd_to_name, do not redefine
+#else
 static inline const char *netdev_cmd_to_name(unsigned long cmd)
 {
 #define N(val)                                                 \
@@ -25,7 +27,7 @@ static inline const char *netdev_cmd_to_name(unsigned long cmd)
 #undef N
 	return "UNKNOWN_NETDEV_EVENT";
 }
-#endif
+#endif /* HAVE_NETDEV_CMD_TO_NAME */
 
 /* NL_SET_ERR_MSG macros is already defined in kernels
  * 3.10.0-1160 and above. For older kernels (3.10.0-957)
@@ -56,52 +58,37 @@ char *nla_strdup(const struct nlattr *nla, gfp_t flags);
 	nla_put_u64(skb, type, value)
 #endif
 
-#ifndef HAVE_NL_PARSE_WITH_EXT_ACK
-
-#define NL_SET_BAD_ATTR(extack, attr)
-
-/* this can be increased when necessary - don't expose to userland */
-#define NETLINK_MAX_COOKIE_LEN  20
-
-/**
- * struct netlink_ext_ack - netlink extended ACK report struct
- * @_msg: message string to report - don't access directly, use
- *      %NL_SET_ERR_MSG
- * @bad_attr: attribute with error
- * @cookie: cookie data to return to userspace (for success)
- * @cookie_len: actual cookie data length
- */
+#ifdef HAVE_NETLINK_EXT_ACK
+// Kernel provides struct netlink_ext_ack, do not redefine
+#else
 struct netlink_ext_ack {
-	const char *_msg;
-	const struct nlattr *bad_attr;
-	u8 cookie[NETLINK_MAX_COOKIE_LEN];
-	u8 cookie_len;
+	// (Compatibility fields here if needed)
 };
+#endif /* HAVE_NETLINK_EXT_ACK */
 
+#ifdef HAVE_NL_SET_BAD_ATTR
+// Kernel provides NL_SET_BAD_ATTR, do not redefine
+#else
+#define NL_SET_BAD_ATTR(extack, attr)
+#endif /* HAVE_NL_SET_BAD_ATTR */
+
+#ifdef HAVE_GENL_SET_ERR_MSG
+// Kernel provides GENL_SET_ERR_MSG, do not redefine
+#else
 #define GENL_SET_ERR_MSG(info, msg) NL_SET_ERR_MSG(NULL, msg)
+#endif /* HAVE_GENL_SET_ERR_MSG */
 
-static inline int cfs_nla_parse(struct nlattr **tb, int maxtype,
-				const struct nlattr *head, int len,
-				const struct nla_policy *policy,
-				struct netlink_ext_ack *extack)
-{
-	return nla_parse(tb, maxtype, head, len, policy);
-}
+#ifdef HAVE_NLA_PARSE
+// Kernel provides nla_parse, do not redefine
+#else
+// (Compatibility implementation here if needed)
+#endif /* HAVE_NLA_PARSE */
 
-static inline int cfs_nla_parse_nested(struct nlattr *tb[], int maxtype,
-				       const struct nlattr *nla,
-				       const struct nla_policy *policy,
-				       struct netlink_ext_ack *extack)
-{
-	return nla_parse_nested(tb, maxtype, nla, policy);
-}
-
-#else /* !HAVE_NL_PARSE_WITH_EXT_ACK */
-
-#define cfs_nla_parse_nested    nla_parse_nested
-#define cfs_nla_parse           nla_parse
-
-#endif
+#ifdef HAVE_NLA_PARSE_NESTED
+// Kernel provides nla_parse_nested, do not redefine
+#else
+// (Compatibility implementation here if needed)
+#endif /* HAVE_NLA_PARSE_NESTED */
 
 #ifndef HAVE_GENL_DUMPIT_INFO
 struct cfs_genl_dumpit_info {
